@@ -1,11 +1,17 @@
+version: "1"
 services:
   - type: web
-    name: probabilistic-engine-v2
-    env: python
+    name: probabilistic-engine
+    runtime: python
+    repo: https://github.com/proxytransfer/probabilistic-engine-v2-backend
+    plan: free
+    region: oregon
     buildCommand: pip install --only-binary=pandas -r requirements.txt
     startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    autoDeployTrigger: commit
+    healthCheckPath: /health
     envVars:
-      - key: JWT_SECRET
-        generateValue: true
       - key: PYTHON_VERSION
         value: 3.12.9
+      - key: JWT_SECRET
+        generateValue: true

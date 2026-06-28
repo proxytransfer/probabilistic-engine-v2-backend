@@ -17,6 +17,10 @@ app.add_middleware(
 )
 
 # Routes
+@app.get("/health")
+async def health_check():
+    return {"status": "ok"}
+
 app.include_router(health.router)
 app.include_router(analysis.router, prefix="/analysis", tags=["analysis"])
 app.include_router(scanner.router, prefix="/scanner", tags=["scanner"])
@@ -29,7 +33,7 @@ async def websocket_endpoint(websocket: WebSocket, symbol: str):
     await ws_manager.connect(websocket, symbol)
     try:
         while True:
+            # Keep-alive simple
             data = await websocket.receive_text()
-            # Handle messages if needed
     except WebSocketDisconnect:
         ws_manager.disconnect(websocket, symbol)
