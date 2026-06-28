@@ -1,3 +1,9 @@
+# app/routers/symbols.py
+# Coloque este arquivo em: app/routers/symbols.py
+# Depois em app/main.py adicione:
+#   from app.routers.symbols import router as symbols_router
+#   app.include_router(symbols_router)
+
 from fastapi import APIRouter
 
 router = APIRouter(tags=["symbols"])
@@ -28,12 +34,21 @@ SYMBOLS = [
     {"symbol": "OIL",     "name": "Petróleo WTI",               "category": "metals",  "provider": "yahoo"},
 ]
 
+
 @router.get("/symbols")
 async def get_symbols():
+    """
+    Retorna todos os símbolos suportados.
+    O Lovable usa isso para montar o dropdown de seleção.
+    """
     return SYMBOLS
+
 
 @router.get("/symbols/{category}")
 async def get_symbols_by_category(category: str):
+    """
+    Filtra por categoria: crypto | indices | forex | metals
+    """
     filtered = [s for s in SYMBOLS if s["category"] == category.lower()]
     if not filtered:
         return {"error": f"Categoria '{category}' não encontrada", "valid": ["crypto", "indices", "forex", "metals"]}
