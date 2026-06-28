@@ -6,18 +6,17 @@ from datetime import datetime
 
 class YahooFinanceProvider(BaseDataProvider):
     async def fetch_candles(self, symbol: str, timeframe: str, limit: int = 100) -> List[Candle]:
-        # Mapear símbolos para o formato do Yahoo Finance
-        # Forex: EURUSD=X, Metais: GC=F (Ouro), etc.
         ticker_symbol = self._map_symbol(symbol)
-        
-        # Mapear timeframe
         interval = self._map_timeframe(timeframe)
         
+        # Usar um período maior para garantir que tenhamos o 'limit' de candles
+        period = "1mo" if timeframe in ["1h", "4h"] else "5d"
+        
         ticker = yf.Ticker(ticker_symbol)
-        df = ticker.history(period="5d", interval=interval)
+        df = ticker.history(period=period, interval=interval)
         
         if df.empty:
-            raise Exception(f"Nenhum dado encontrado para o símbolo {symbol}")
+            raise Exception(f"Nenhum dado encontrado para o símbolo {symbol} (Yahoo: {ticker_symbol})")
             
         df = df.tail(limit)
         
@@ -34,18 +33,23 @@ class YahooFinanceProvider(BaseDataProvider):
         return candles
 
     def _map_symbol(self, symbol: str) -> str:
-        # Lógica de mapeamento para o Yahoo
         symbol = symbol.upper()
-        if len(symbol) == 6 and symbol not in ["BTCUSD", "ETHUSD"]: # Provável par Forex
-            return f"{symbol}=X"
+        # Mapeamento específico solicitado pelo usuário
+        if symbol in ["NQ100", "NAS100", "NQ", "USTEC"]:
+            return "NQ=F"  # Futuros do Nasdaq 100
+        if symbol in ["SP500", "US500"]:
+            return "ES=F"
         if symbol in ["GOLD", "XAUUSD"]:
             return "GC=F"
         if symbol in ["SILVER", "XAGUSD"]:
             return "SI=F"
+        # Forex
+        if len(symbol) == 6 and not symbol.endswith("USDT"):
+            return f"{symbol}=X"
         return symbol
 
     def _map_timeframe(self, timeframe: str) -> str:
         mapping = {
-            "1m": "1m", "5m": "5m", "15m": "15m", "1h": "1h", "4h": "1h", "1d": "1d"
+            "1m": "1m", "5m": "5m", "15m": "15m", "30m": "30m", "1h": "1h", "1d": "1d"
         }
         return mapping.get(timeframe, "1h")

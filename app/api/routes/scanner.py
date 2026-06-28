@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException
 from typing import List, Dict
-from ...services.analysis_orchestrator import AnalysisOrchestrator
-from ...domain.analysis import AnalysisReport
+from app.services.analysis_orchestrator import AnalysisOrchestrator
+from app.domain.analysis import AnalysisReport
 
 router = APIRouter()
 
@@ -14,8 +14,7 @@ async def scan_assets(symbols: List[str]):
         try:
             report = await orchestrator.get_full_analysis(symbol)
             results[symbol] = report
-        except Exception as e:
-            # Continuar para o próximo ativo mesmo se um falhar
+        except Exception:
             continue
             
     return results

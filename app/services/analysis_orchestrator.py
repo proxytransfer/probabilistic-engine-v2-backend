@@ -1,10 +1,10 @@
 from datetime import datetime
-from ..domain.analysis import AnalysisReport
-from ..engines.liquidity.detector import EfficientLiquidityDetector
-from ..engines.quarterly.state_machine import QuarterStateMachine
-from ..engines.probability.calibrator import ScoreCalibrator
-from ..core.config import get_settings
-from ..services.data_service import DataService
+from app.domain.analysis import AnalysisReport
+from app.engines.liquidity.detector import EfficientLiquidityDetector
+from app.engines.quarterly.state_machine import QuarterStateMachine
+from app.engines.probability.calibrator import ScoreCalibrator
+from app.core.config import get_settings
+from app.services.data_service import DataService
 
 class AnalysisOrchestrator:
     def __init__(self, cache=None, provider=None):
@@ -15,15 +15,14 @@ class AnalysisOrchestrator:
         self.calibrator = ScoreCalibrator(k=self.settings.CALIBRATION_K)
 
     async def get_full_analysis(self, symbol: str) -> AnalysisReport:
-        # 1. Fetch real market data from Binance
+        # 1. Fetch real market data
         candles = await self.data_service.get_market_data(symbol, "1h")
         
-        # 2. Update engines with real data
+        # 2. Update engines
         self.liquidity_detector.update(candles)
         
-        # 3. Calculate score based on market state
-        # (Lógica simplificada para exemplo, integrando os motores)
-        raw_score = 70.0 
+        # 3. Calculate score
+        raw_score = 72.5 # Valor base para teste, integrando lógica dos motores futuramente
         
         # 4. Calibrate probability
         prob = self.calibrator.probability(raw_score)
@@ -36,9 +35,9 @@ class AnalysisOrchestrator:
             calibrated_probability=prob,
             direction="BULLISH" if raw_score > 50 else "BEARISH",
             confidence="HIGH" if prob > 0.7 else "MEDIUM",
-            components={"liquidity": 75, "quarterly": 65},
+            components={"liquidity": 80, "quarterly": 65},
             active_zones=self.liquidity_detector.get_active_zones(),
             scenario="REAL_TIME_ANALYSIS",
-            targets=[candles[-1].close * 1.02] if candles else []
+            targets=[candles[-1].close * 1.015] if candles else []
         )
         return report
